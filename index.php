@@ -1,82 +1,29 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>SQL</title>
-        <style>
-            @import url("./styles.css");
-        </style>
-    </head>
-    <body>
-    <?php
-        $servername ="us-cdbr-iron-east-05.cleardb.net";
-        $username ="bbf7de8df9454c";
-        $password ="441ff6f0";
-        $dbname ="heroku_6ed4258c62bdf7f";
-        
-        //create connection
-        $conn = new mysqli($servername , $username ,$password ,$dbname);
-        
-        if($conn->connect_error)
-        {
-        die("Connection failed".$conn->connect_error);
-        }
+<?php
+
+include 'database.php';
+
+function displayDeviceList(){
     
-    ?>
-    <?php
-        
-    function displayDevices()
-    {
-    global $conn;
-       
-   
-    $sql = "SELECT * FROM Device WHERE 1";
-    $print = $conn->query($sql);
-           
-        if(!isset($_GET['submit']))
-        {
-        
-        
-        if($print->num_rows > 0) {
-              
-            while($row = $print->fetch_assoc()){
-              
-                echo "<div class='center'>";
-                echo "Device Name: ".$row["deviceName"]. ", Type:    ". $row["deviceType"] .", Price:   ".$row["price"]."<br>";
-                echo "</div>" ;          
-                             }
-                        }
-
-
-            }
-   
-       if (isset($_GET['submit']))
+    $sql = "SELECT * from device where 1";
+    
+    if (isset($_GET['submit']))
        {
-           
-           
-           if (!empty($_GET['deviceName']))
-           {
+           if (($_GET['deviceName'])) {
                $name = $_GET['deviceName'];
-               $sql .=" AND deviceName LIKE '$name'"; 
-    
+               $sql .=" AND deviceName like '%$name%'"; 
             }
             
-           if (!empty($_GET['deviceType'])) {
+           if (($_GET['deviceType'])) {
                 
                 $type = $_GET['deviceType'];
                $sql .= " AND deviceType = '$type'"; 
                
-               
            }
             if (isset($_GET['available'])) 
             {
-                $sql .= " AND status = 'available'";
+                $sql .= " AND status like '%vailable%'";
             }
             
-            if(!isset($_GET['available']))
-            {
-                
-                $sql.= " AND status = 'checked out'";
-            }
             
             if (isset($_GET['name'])) 
             {
@@ -87,31 +34,28 @@
             {
                  $sql .= " ORDER BY price";
             }
-            $print = $conn->query($sql);
-               
-            if(isset($_GET['submit']))
-            {
-            
-            if($print->num_rows > 0) {
+       }
 
-                while($row = $print->fetch_assoc()){
-                  
-                    echo "<div class='center'>";
-                    echo "Device Name: ".$row["deviceName"]. ", Type:    ". $row["deviceType"] .", Price:   $".$row["price"]."<br>";
-                    echo "</div>" ;          
-                                 }
-                            }
+    
+    $dbConn = getDatabaseConnection();
+    
+    $statement = $dbConn->prepare($sql);
     
     
-            }           
-      
-        echo "<br>";
-        echo "<br>";
-       
-            }
-        }       
-           ?>
-           <div class="main">
+    
+    $statement->execute();
+    
+    $records=$statement->fetchAll();
+    
+    foreach($records as $record){
+        echo $record["deviceName"]." " .$record["deviceType"]." ".$record["price"]." ".$record["status"]."<br>";
+        
+    }
+}
+?>
+
+<html>
+    <div class="main">
            <h1> Devices Library </h1>
            <br>
            <br>
@@ -143,12 +87,6 @@
                <input type="submit" value="Submit" name="submit" >
                
            </form>
+           <?=displayDeviceList()?>
            </div>
-           
-           
-           <hr>
-           
-           <?=displayDevices()?>
-           
-    </body>
 </html>
